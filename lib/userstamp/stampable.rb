@@ -66,6 +66,7 @@ module Ddb #:nodoc:
         # The method will automatically setup all the associations, and create <tt>before_save</tt>
         # and <tt>before_create</tt> filters for doing the stamping.
         def stampable(options = {})
+          return if self == ActiveRecord::Base # avoid the doubly defined assocation error from mixing into base
           defaults  = {
                         :stamper_class_name => :user,
                         :creator_attribute  => Ddb::Userstamp.compatibility_mode ? :created_by : :creator_id,
