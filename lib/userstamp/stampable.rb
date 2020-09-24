@@ -66,6 +66,7 @@ module Ddb #:nodoc:
         # The method will automatically setup all the associations, and create <tt>before_save</tt>
         # and <tt>before_create</tt> filters for doing the stamping.
         def stampable(options = {})
+          return if self == ActiveRecord::Base # avoid the doubly defined assocation error from mixing into base
           defaults  = {
                         :stamper_class_name => :user,
                         :creator_attribute  => Ddb::Userstamp.compatibility_mode ? :created_by : :creator_id,
@@ -80,17 +81,17 @@ module Ddb #:nodoc:
 
           class_eval do
             belongs_to :creator, :class_name => self.stamper_class_name.to_s.singularize.camelize,
-                                 :foreign_key => self.creator_attribute
+                                 :foreign_key => self.creator_attribute, :required => false
                                  
             belongs_to :updater, :class_name => self.stamper_class_name.to_s.singularize.camelize,
-                                 :foreign_key => self.updater_attribute
+                                 :foreign_key => self.updater_attribute, :required => false
                                  
             before_save     :set_updater_attribute
             before_create   :set_creator_attribute
                                  
             if defined?(Caboose::Acts::Paranoid)
               belongs_to :deleter, :class_name => self.stamper_class_name.to_s.singularize.camelize,
-                                   :foreign_key => self.deleter_attribute
+                                   :foreign_key => self.deleter_attribute, :required => false
               before_destroy  :set_deleter_attribute
             end
           end
@@ -149,3 +150,4 @@ module Ddb #:nodoc:
 end
 
 ActiveRecord::Base.send(:include, Ddb::Userstamp::Stampable) if defined?(ActiveRecord)
+
